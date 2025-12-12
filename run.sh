@@ -2,4 +2,4 @@
 
 cargo build &&
     cargo bootimage &&
-    qemu-system-x86_64 -drive format=raw,file=target/x86_64-schkool/debug/bootimage-schkool.bin
+    qemu-system-x86_64 -drive format=raw,file=target/x86_64-fluksos/debug/bootimage-fluksos.bin
