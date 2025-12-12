@@ -1,29 +1,37 @@
 #![no_std]
 #![no_main]
 
+mod vga_buffer;
+
 use core::panic::PanicInfo;
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("\n\nKernel Panic!");
+    println!("{}", info);
+    
     loop {}
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     kmain();
+    
+    #[allow(unreachable_code)]
+    loop {}
 }
 
-static MOTD: &[u8] = b"SchkoolOS (c) 2025";
+static MOTD: &str = r"
+  ____       _     _               _    ___  ____  
+ / ___|  ___| |__ | | _____   ___ | |  / _ \/ ___|   Kevin Wiskia
+ \___ \ / __| '_ \| |/ / _ \ / _ \| | | | | \___ \   (c) 2025
+  ___) | (__| | | |   < (_) | (_) | | | |_| |___) |
+ |____/ \___|_| |_|_|\_\___/ \___/|_|  \___/|____/ 
+";
 
 fn kmain() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
+    println!("{}\n", &MOTD);
+    print!("> ");
 
-    for (i, &byte) in MOTD.iter().enumerate() {
-        unsafe {
-            *vga_buffer.offset(i as isize * 2) = byte; // Charater
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb; // Color
-        }
-    }
-
-    loop {}
+    panic!("Aw shit!");
 }
