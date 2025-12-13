@@ -1,7 +1,11 @@
 #![no_std]
 #![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 mod vga_buffer;
+mod serial;
 
 use core::panic::PanicInfo;
 
@@ -9,13 +13,41 @@ use core::panic::PanicInfo;
 fn panic(info: &PanicInfo) -> ! {
     println!("\n\nKernel Panic!");
     println!("{}", info);
-    
+
+    #[cfg(test)] {
+        serial_println!("{}", info);
+        exit_qemu(QemuExitCode::Failed);
+    }
+
     loop {}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum QemuExitCode {
+    Success = 0x10,
+    Failed = 0x11,
+}
+
+#[cfg(test)]
+static QEMU_EXIT_PORT: u16 = 0xf4;
+
+#[cfg(test)]
+fn exit_qemu(exit_code: QemuExitCode) {
+    use x86_64::instructions::port::Port;
+
+    unsafe {
+        let mut port = Port::new(QEMU_EXIT_PORT);
+        port.write(exit_code as u32);
+    }
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     kmain();
+
+    #[cfg(test)]
+    test_main();
     
     #[allow(unreachable_code)]
     loop {}
@@ -29,9 +61,11 @@ static MOTD: &str = r"
  |_|   |_|\__,_|_|\_\___/  \___/|____/ 
 ";
 
-fn kmain() -> ! {
-    println!("{}\n", &MOTD);
-    print!("> ");
+fn kmain() {
+    println!("{}", &MOTD);
 
-    panic!("Aw shit!");
+    #[cfg(test)]
+    test_main();
+
+    panic!("Aw shit, write some runtime!");
 }
