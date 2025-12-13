@@ -2,12 +2,14 @@
 
 ## Setup
 - Install rustup with nightly toolchain
-- Install `qemu-system` on Linux
+- Install `qemu-system` using Linux of WSL2
 
-## Building / Running
+## Commands
 
-```
-cargo build
-cargo bootimage
+```bash
+cargo build # Build code
+cargo bootimage # Create boot image
+
+# Build code, boot image, and run in qemu
 ./run.sh
 ```
