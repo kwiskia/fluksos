@@ -1,46 +1,11 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+#![test_runner(fluksos::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-mod vga_buffer;
-mod serial;
-
 use core::panic::PanicInfo;
-
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    println!("\n\nKernel Panic!");
-    println!("{}", info);
-
-    #[cfg(test)] {
-        serial_println!("{}", info);
-        exit_qemu(QemuExitCode::Failed);
-    }
-
-    loop {}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum QemuExitCode {
-    Success = 0x10,
-    Failed = 0x11,
-}
-
-#[cfg(test)]
-static QEMU_EXIT_PORT: u16 = 0xf4;
-
-#[cfg(test)]
-fn exit_qemu(exit_code: QemuExitCode) {
-    use x86_64::instructions::port::Port;
-
-    unsafe {
-        let mut port = Port::new(QEMU_EXIT_PORT);
-        port.write(exit_code as u32);
-    }
-}
+use fluksos::println;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
@@ -51,6 +16,21 @@ pub extern "C" fn _start() -> ! {
     
     #[allow(unreachable_code)]
     loop {}
+}
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("\n\nKernel Panic!");
+    println!("{}", info);
+
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    fluksos::test_panic_handler(info)
 }
 
 static MOTD: &str = r"
