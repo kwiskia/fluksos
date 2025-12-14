@@ -18,7 +18,7 @@ pub extern "C" fn _start() -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("\n\nKernel Panic!");
+    println!("\n\nKernel panic!");
     println!("{}", info);
 
     loop {}
