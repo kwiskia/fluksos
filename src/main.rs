@@ -11,9 +11,6 @@ use fluksos::println;
 pub extern "C" fn _start() -> ! {
     kmain();
 
-    #[cfg(test)]
-    test_main();
-    
     #[allow(unreachable_code)]
     loop {}
 }
@@ -42,7 +39,10 @@ static MOTD: &str = r"
 ";
 
 fn kmain() {
-    println!("{}", &MOTD);
+    println!("{}", MOTD);
+
+    fluksos::init();
+    x86_64::instructions::interrupts::int3();
 
     #[cfg(test)]
     test_main();
