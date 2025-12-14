@@ -1,4 +1,8 @@
-# SchkoolOS
+# FluksOS
+
+Currently a learning experience in setting up a toolchain in rust. More to come :D
+
+Minor tweaks excluded this is currently bootstrapping work from Phillip Oppermann's blog: https://os.phil-opp.com/double-fault-exceptions/
 
 ## Setup
 - Install rustup with nightly toolchain
