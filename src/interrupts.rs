@@ -1,32 +1,27 @@
 
-use x86_64::{set_general_handler, structures::idt::{InterruptDescriptorTable, InterruptStackFrame}};
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 use lazy_static::lazy_static;
-use crate::println;
+use crate::{println};
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new();
-        set_general_handler!(&mut idt, breakpoint_handler);
+        idt.breakpoint.set_handler_fn(breakpoint_handler);
+        idt.double_fault.set_handler_fn(double_fault_handler);
         idt
     };
 }
 
-fn breakpoint_handler(
-    stack_frame: InterruptStackFrame,
-    index: u8,
-    error_code: Option<u64>
+extern "x86-interrupt" fn breakpoint_handler(
+    stack_frame: InterruptStackFrame
 ) {
-    println!(
-        "Exception Breakpoint!\n{:#?}, {}, {:?}",
-        stack_frame,
-        index,
-        error_code
-    );
+    println!("Exception breakpoint!\n{:#?}", stack_frame);
+}
 
-    match index {
-        3 => println!("Breakpoint (int3)!"),
-        _ => ()
-    }
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: InterruptStackFrame, error_code: u64) -> !
+{
+    panic!("Double fault!\n{:#?}\nCode: {}", stack_frame, error_code);
 }
 
 pub fn init_idt() {
