@@ -5,14 +5,13 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use fluksos::println;
+use fluksos::{hlt_loop, println};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     kmain();
 
-    #[allow(unreachable_code)]
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(not(test))]
@@ -21,7 +20,7 @@ fn panic(info: &PanicInfo) -> ! {
     println!("\n\nKernel panic!");
     println!("{}", info);
 
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]

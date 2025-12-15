@@ -17,3 +17,10 @@ cargo bootimage # Create boot image
 # Build code, boot image, and run in qemu
 ./run.sh
 ```
+
+## Todo ideas
+- Mutex with interrupt disabling
+- Character device driver for VGA buffer
+- Better macros for defining interrupt handlers
+    - Abstract extern "x86..."
+    - PIC related handlers, notify end of interrupt handler
