@@ -21,6 +21,20 @@ cargo bootimage # Create boot image
 ## Todo ideas
 - Mutex with interrupt disabling
 - Character device driver for VGA buffer
+    - Great first project to make my own
+    - Basic terminal emulator over character device
+        - Printing from top!
+        - Line buffering
+        - Fancier kernel messages, color?
 - Better macros for defining interrupt handlers
     - Abstract extern "x86..."
     - PIC related handlers, notify end of interrupt handler
+- Later...
+    - Proccesses/userland
+    - VirtIO drivers
+        - Display
+        - PCI bus
+        - Network adapter
+    - Network stack!
+    - IPC!
+    - Everything is an object ecosystem
