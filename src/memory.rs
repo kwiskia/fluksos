@@ -1,3 +1,5 @@
+use core::alloc::Layout;
+
 use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
 use x86_64::{
     PhysAddr, VirtAddr, structures::paging::{
@@ -104,5 +106,23 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
         let frame = self.usable_frames().nth(self.next);
         self.next += 1;
         frame
+    }
+}
+
+pub unsafe trait GlobalAlloc {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8;
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout);
+
+    unsafe fn alloc_zeroed(&self, _layout: Layout) -> *mut u8 {
+        todo!();
+    }
+
+    unsafe fn realloc(
+        &self,
+        _ptr: *mut u8,
+        _layout: Layout,
+        _new_size: usize
+    ) -> *mut u8 {
+        todo!();
     }
 }

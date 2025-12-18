@@ -19,6 +19,7 @@ cargo bootimage # Create boot image
 ```
 
 ## Todo ideas
+- Rust linter on save with proper rules
 - Mutex with interrupt disabling
 - Character device driver for VGA buffer
     - Great first project to make my own
