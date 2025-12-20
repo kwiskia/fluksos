@@ -1,4 +1,4 @@
-use linked_list_allocator::LockedHeap;
+use spin::{Mutex, MutexGuard};
 use x86_64::{
     structures::paging::{
         mapper::MapToError, FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB,
@@ -6,8 +6,14 @@ use x86_64::{
     VirtAddr,
 };
 
+use crate::allocator::fixed_size_block::FixedSizeBlockAlloactor;
+
+pub mod bump;
+pub mod linked_list;
+pub mod fixed_size_block;
+
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<FixedSizeBlockAlloactor> = Locked::new(FixedSizeBlockAlloactor::new());
 
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024;
@@ -16,9 +22,8 @@ pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>
 ) -> Result<(), MapToError<Size4KiB>> {
-    let heap_start = VirtAddr::new(HEAP_START as u64);
-
     let page_range = {
+        let heap_start = VirtAddr::new(HEAP_START as u64);
         let heap_end = heap_start + (HEAP_SIZE as u64) - 1;
         let heap_start_page = Page::containing_address(heap_start);
         let heap_end_page = Page::containing_address(heap_end);
@@ -37,9 +42,29 @@ pub fn init_heap(
         };
 
         unsafe {
-            ALLOCATOR.lock().init(heap_start.as_mut_ptr(), HEAP_SIZE);
+            ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
         }
     }
 
     Ok(())
+}
+
+pub struct Locked<T> {
+    inner: Mutex<T>
+}
+
+impl<T> Locked<T> {
+    pub const fn new(inner: T) -> Self {
+        Self {
+            inner: Mutex::new(inner)
+        }
+    }
+
+    pub fn lock(&self) -> MutexGuard<'_, T> {
+        self.inner.lock()
+    }
+}
+
+fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
 }
