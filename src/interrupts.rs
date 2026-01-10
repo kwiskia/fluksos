@@ -1,11 +1,11 @@
 
 use pic8259::ChainedPics;
 use x86_64::{instructions::port::Port, structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode}};
-use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
+use pc_keyboard::{layouts, HandleControl, Keyboard, ScancodeSet1};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-use crate::{gdt, hlt_loop, print, println};
+use crate::{gdt, hlt_loop, println};
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -80,18 +80,10 @@ static KEYBOARD_PORT: u16 = 0x60;
 extern "x86-interrupt" fn keyboard_interrupt_handler(
     _stack_frame: InterruptStackFrame)
 {
-    let mut keyboard = KEYBOARD.lock();
     let mut port= Port::new(KEYBOARD_PORT);
 
     let scancode: u8 = unsafe { port.read() };
-    if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
-        if let Some(key) = keyboard.process_keyevent(key_event) {
-            match key {
-                DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) => print!("{:?}", key),
-            }
-        }
-    }
+    crate::task::keyboard::add_scancode(scancode);
 
     unsafe {
         PICS.lock()

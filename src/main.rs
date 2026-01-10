@@ -10,7 +10,15 @@ use x86_64::VirtAddr;
 
 extern crate alloc;
 
-use fluksos::{allocator, hlt_loop, memory::{self, BootInfoFrameAllocator}, println};
+use fluksos::{
+    allocator,
+    hlt_loop,
+    memory::{self, BootInfoFrameAllocator},
+    println,
+    task::{
+        Task, executor::Executor, keyboard
+    }
+};
 
 entry_point!(kernel_main);
 
@@ -53,5 +61,10 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
+    let mut executor = Executor::new();
+    executor.spawn(Task::new(keyboard::print_keypresses())); // new
+    executor.run();
+
+    #[allow(unreachable_code)]
     hlt_loop()
 }
