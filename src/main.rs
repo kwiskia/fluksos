@@ -12,8 +12,10 @@ extern crate alloc;
 
 use fluksos::{
     allocator,
+    drivers::virtio_network_adapter::VirtIoNetworkAdapter,
     hlt_loop,
     memory::{self, BootInfoFrameAllocator},
+    pci::PciDriverRegistry,
     println,
     task::{
         Task, executor::Executor, keyboard
@@ -58,12 +60,30 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     allocator::init_heap(&mut mapper, &mut frame_allocator)
         .expect("Heap initialization failed");
 
-    #[cfg(test)]
-    test_main();
+    let mut pci_registry = PciDriverRegistry::new();
+    pci_registry.register::<VirtIoNetworkAdapter>();
+
+    // Scan PCI devices and print the list
+    let devices = fluksos::pci::scan_pci();
+    println!("Detected {} PCI device(s)", devices.len());
+    for dev in devices {
+        println!(
+            "[PCI] {:02x}:{:02x}.{} - vendor={:#06x}, device={:#06x}, class={:#04x}, subclass={:#04x}, prog_if={:#04x}",
+            dev.bus, dev.device, dev.function, dev.vendor_id, dev.device_id, dev.class, dev.subclass, dev.prog_if
+        );
+
+        match pci_registry.find_supported(dev.vendor_id, dev.device_id) {
+            Some(name) => println!("    [PCI] Found driver: {0}", name),
+            None => continue
+        }
+    }
 
     let mut executor = Executor::new();
     executor.spawn(Task::new(keyboard::print_keypresses())); // new
     executor.run();
+
+    #[cfg(test)]
+    test_main();
 
     #[allow(unreachable_code)]
     hlt_loop()

@@ -41,8 +41,15 @@ version = "1.0"
 features = ["spin_no_std"]
 
 [package.metadata.bootimage]
+run-args = [
+    "-netdev", "user,id=net0,hostfwd=tcp::2222-:22",
+    "-device", "virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56",
+    "-serial", "stdio"
+]
 test-args = [
     "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
+    "-netdev", "user,id=net0,hostfwd=tcp::2222-:22",
+    "-device", "virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56",
     "-serial", "stdio",
     "-display", "none"
 ]
